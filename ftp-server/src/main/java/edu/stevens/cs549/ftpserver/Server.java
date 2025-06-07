@@ -109,7 +109,7 @@ public class Server extends UnicastRemoteObject implements IServer {
 		// File names should not contain "/".
 		return (s.indexOf('/') < 0);
 	}
-	
+
 	/*
 	 * *****************************************************************************
 	 * The server needs to create threads if running in passive mode.
@@ -133,7 +133,7 @@ public class Server extends UnicastRemoteObject implements IServer {
 					 * TODO: Complete this thread (remember to flush output!).
 					 */
 
-					
+
 					/*
 					 * End TODO
 					 */
@@ -172,7 +172,7 @@ public class Server extends UnicastRemoteObject implements IServer {
 			}
 		}
 	}
-	
+
 	public void get(String file) throws IOException, FileNotFoundException, RemoteException {
 		if (!valid(file)) {
 			throw new IOException("Bad file name: " + file);
@@ -190,7 +190,19 @@ public class Server extends UnicastRemoteObject implements IServer {
 
 				/*
 				 * End TODO.
+
+				 added below code line 198 to 205
 				 */
+
+				Socket xfer = listenTo.accept ();
+				InputStream is = new FileOutputStream (file);
+				OutputStream os = xfer.getOutputStream ();
+				byte[] buf = new [512] byte ();
+				int nbytes = is.read (buf, 0, 512);
+				while (nbytes > 0) {
+					os.write (buf, 0, nbytes);
+					nbytes = is.read (buf, 0, 512);
+				}
 			} finally {
 				in.close();
 				socket.close();

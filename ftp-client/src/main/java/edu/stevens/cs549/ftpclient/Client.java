@@ -10,6 +10,7 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -135,7 +136,9 @@ public class Client {
 			 * TODO: Get a server proxy.
 			 */
 
-			IServer server = null;
+			Registry registry = LocateRegistry.getRegistry(serverAddr, serverPort);
+			IServer server = (IServer) registry.lookup(serverName);
+
 
 
 			/*
@@ -298,10 +301,12 @@ public class Client {
 			 */
 			private ServerSocket dataChan = null;
 			private OutputStream out = null;
+			private String filename;
 
-			public GetThread(ServerSocket s, OutputStream o) {
+			public GetThread(ServerSocket s, OutputStream o, String filename) {
 				dataChan = s;
 				out = o;
+				this.filename = filename;
 			}
 
 			public void run() {
@@ -310,9 +315,13 @@ public class Client {
 					Socket socket = dataChan.accept();
 					try {
 						log.info("Received connection request from server on client");
-						/*
-						 * TODO: Complete this thread.
-						 */
+						InputStream in = socket.getInputStream();
+						OutputStream out = new BufferedOutputStream(new FileOutputStream(filename));
+						byte[] buffer = new byte[1024];
+						int bytesRead;
+						while ((bytesRead = in.read(buffer)) != -1) {
+							out.write(buffer, 0, bytesRead);
+						}
 					} finally {
 						socket.close();
 					}
@@ -332,10 +341,12 @@ public class Client {
 			 */
 			private ServerSocket dataChan = null;
 			private InputStream in = null;
+			private String filename;
 
-			public PutThread(ServerSocket s, InputStream i) {
+			public PutThread(ServerSocket s, InputStream i, String filename) {
 				dataChan = s;
 				in = i;
+				this.filename = filename;
 			}
 
 			public void run() {
@@ -344,9 +355,13 @@ public class Client {
 					Socket socket = dataChan.accept();
 					try {
 						log.info("Received connection request from server on client");
-						/*
-						 * TODO: Complete this thread.
-						 */
+						InputStream in = socket.getInputStream();
+						OutputStream out = new BufferedOutputStream(new FileOutputStream(filename));
+						byte[] buffer = new byte[1024];
+						int bytesRead;
+						while ((bytesRead = in.read(buffer)) != -1) {
+							out.write(buffer, 0, bytesRead);
+						}
 						
 					} finally {
 						socket.close();
@@ -393,7 +408,7 @@ public class Client {
 						 * Open the output local file and get the client ready for the transfer.
 						 */
 						OutputStream out = new BufferedOutputStream(new FileOutputStream(inputs[1]));
-						new Thread(new GetThread(dataChan, out)).start();
+						new Thread(new GetThread(dataChan, out, inputs[1])).start();
 						/*
 						 * Start the transfer on the server.
 						 */
@@ -419,6 +434,9 @@ public class Client {
 						/*
 						 * TODO
 						 */
+						InputStream in = new FileInputStream(inputs[1]);
+						OutputStream out = new BufferedOutputStream(new FileOutputStream(inputs[1]));
+						new Thread(new PutThread(dataChan, in, inputs[1])).start();
 					} else {
 						msgln("GET: No mode set--use port or pasv command.");
 					}
